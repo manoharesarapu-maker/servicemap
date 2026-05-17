@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M9 Council — Service × Technology Map</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+:root{--bg:#0a0c10;--surface:#111318;--surface2:#181c23;--border:#232830;--text:#e8eaf0;--muted:#6b7280;--accent:#00d4a8}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden}
+header{padding:16px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:0;background:rgba(10,12,16,.97);backdrop-filter:blur(12px);z-index:200}
+.hl h1{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;letter-spacing:-.02em}
+.hl h1 span{color:var(--accent)}
+.hl p{font-size:.65rem;color:var(--muted);margin-top:1px;font-family:'DM Mono',monospace;letter-spacing:.04em}
+.hdr-actions{display:flex;align-items:center;gap:10px}
+.home-btn{padding:5px 14px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--muted);font-family:'DM Mono',monospace;font-size:.68rem;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:5px}
+.home-btn:hover{color:var(--accent);border-color:var(--accent)}
+.vt{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px}
+.vt button{padding:5px 16px;border:none;border-radius:5px;background:0 0;color:var(--muted);font-family:'DM Mono',monospace;font-size:.68rem;cursor:pointer;transition:.2s;letter-spacing:.04em}
+.vt button.active{background:var(--surface2);color:var(--accent);border:1px solid var(--border)}
+/* Breadcrumb */
+.bc-bar{padding:6px 28px;border-bottom:1px solid var(--border);background:var(--surface);font-family:'DM Mono',monospace;font-size:.64rem;display:flex;align-items:center;gap:0;min-height:28px}
+.bc-item{color:var(--muted);cursor:pointer;padding:2px 0;transition:.15s}
+.bc-item:hover{color:var(--accent)}
+.bc-item.current{color:var(--text);cursor:default}
+.bc-sep{color:var(--border);margin:0 8px;font-size:.55rem}
+/* App grid */
+.app{display:grid;grid-template-columns:250px 1fr 310px;height:calc(100vh - 92px)}
+@media(max-width:1100px){.app{grid-template-columns:220px 1fr 270px}}
+@media(max-width:820px){.app{grid-template-columns:1fr;grid-template-rows:auto 420px auto;height:auto}}
+/* Left panel */
+.lp{border-right:1px solid var(--border);overflow-y:auto;padding:14px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.sec-title{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin:16px 0 6px}
+.sec-title:first-child{margin-top:0}
+.tech-chip{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:6px;cursor:pointer;margin-bottom:2px;transition:.15s;border:1px solid transparent;user-select:none}
+.tech-chip:hover{background:var(--surface2)}
+.tech-chip.active{background:var(--surface2);border-color:var(--border)}
+.tech-chip.off{opacity:.3}
+.tech-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tech-label{font-size:.72rem;flex:1;color:var(--text)}
+.tech-count{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted)}
+.dom-chip{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:6px;cursor:pointer;margin-bottom:2px;transition:.15s;border:1px solid transparent;user-select:none}
+.dom-chip:hover{background:var(--surface2)}
+.dom-chip .dd{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dom-chip .dl{font-size:.72rem;flex:1}
+.dom-chip .dc{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted)}
+/* Centre canvas */
+.canvas{overflow:hidden;position:relative;background:var(--surface)}
+#sunView{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative}
+#cardView{display:none;overflow-y:auto;height:100%;padding:14px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
+.dz{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:.2s;position:relative}
+.dz:hover{border-color:#444}
+.dz.selected{border-color:var(--accent);background:#131920}
+.dz-head{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px}
+.dz-icon{font-size:1.2rem;line-height:1}
+.dz-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem}
+.dz-sub{font-size:.6rem;color:var(--muted);font-family:'DM Mono',monospace;margin-top:1px}
+.dz-desc{font-size:.66rem;color:#9ca3af;line-height:1.5;margin-bottom:8px}
+.svc-group{margin-bottom:4px}
+.svc-l1{font-size:.7rem;font-weight:500;color:var(--text);padding:3px 0 1px;cursor:pointer;display:flex;align-items:center;gap:4px;user-select:none}
+.svc-l1::before{content:'▸';font-size:.55rem;color:var(--muted);transition:.15s;display:inline-block}
+.svc-l1.open::before{transform:rotate(90deg)}
+.svc-l2-list{display:none;padding-left:14px}
+.svc-l2-list.open{display:block}
+.svc-l2{font-size:.66rem;color:#9ca3af;padding:2px 0;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.t-tag{font-family:'DM Mono',monospace;font-size:.6rem;padding:2px 7px;border-radius:3px;letter-spacing:.02em;white-space:nowrap;cursor:pointer}
+.dz-techs{display:flex;flex-wrap:wrap;gap:3px;margin-top:8px}
+.dz-tech-badge{font-family:'DM Mono',monospace;font-size:.58rem;padding:2px 7px;border-radius:3px;letter-spacing:.03em}
+/* Right panel */
+.rp{border-left:1px solid var(--border);overflow-y:auto;padding:14px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.rp-close{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;padding:2px 6px;border-radius:4px;transition:.15s}
+.rp-close:hover{color:var(--accent);background:var(--surface)}
+.dc2{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;animation:fadeIn .25s ease;position:relative}
+.dc2 h3{font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;margin-bottom:5px;display:flex;align-items:center;gap:7px}
+.dc2 p{font-size:.7rem;color:#9ca3af;line-height:1.6}
+.uc-item{font-size:.66rem;color:#9ca3af;padding:4px 0;border-bottom:1px solid var(--border);line-height:1.4;display:flex;align-items:flex-start;gap:5px}
+.uc-item:last-child{border-bottom:none}
+.uc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px;text-align:center}
+.stat-num{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:var(--accent);line-height:1}
+.stat-label{font-size:.56rem;color:var(--muted);margin-top:2px;font-family:'DM Mono',monospace}
+.empty-state{text-align:center;padding:36px 18px;color:var(--muted)}
+.empty-state .es-icon{font-size:1.8rem;margin-bottom:8px}
+.empty-state p{font-size:.72rem;line-height:1.6}
+.sun-center-label{position:absolute;pointer-events:none;text-align:center;font-family:'Syne',sans-serif;z-index:10;width:220px;min-height:112px;padding:18px 18px 16px;border-radius:999px;background:radial-gradient(circle at 50% 42%,rgba(24,28,35,.96),rgba(17,19,24,.72) 58%,rgba(17,19,24,.28) 100%);border:1px solid rgba(255,255,255,.075);box-shadow:0 24px 70px rgba(0,0,0,.36),inset 0 1px 0 rgba(255,255,255,.06);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .36s cubic-bezier(.22,1,.36,1),transform .42s cubic-bezier(.22,1,.36,1),box-shadow .42s cubic-bezier(.22,1,.36,1);will-change:transform,opacity}
+.sun-center-label.changing{opacity:.18;transform:translate(-50%,-50%) scale(.965)}
+.scl-kicker{font-family:'DM Mono',monospace;font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(232,234,240,.48);margin-bottom:5px}
+.scl-name{font-weight:800;font-size:1.04rem;line-height:1.05;color:var(--text);max-width:178px;word-wrap:break-word;letter-spacing:-.045em}
+.scl-sub{font-size:.6rem;color:#9ca3af;font-family:'DM Mono',monospace;margin-top:7px;line-height:1.45}
+.scl-summary{font-size:.62rem;color:#a7adb8;line-height:1.45;margin-top:8px;max-width:178px;font-family:'Inter',sans-serif}
+.sunburst-svg{overflow:visible;filter:drop-shadow(0 28px 55px rgba(0,0,0,.34))}
+.sun-segment{transition:filter .42s cubic-bezier(.22,1,.36,1),opacity .42s cubic-bezier(.22,1,.36,1)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:0 0}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ═══ SUNBURST SCALE + RIGHT PANEL LIST EXPERIENCE ═══ */
+#sunView svg{max-width:100%;max-height:100%;}
+.sunburst-svg{transform:scale(1.045);transform-origin:center center;}
+.rp{min-width:330px;}
+.tech-chip.active{border-color:rgba(39,224,193,.35);box-shadow:0 0 0 1px rgba(39,224,193,.08),0 14px 34px rgba(0,0,0,.18)}
+@media(max-width:1180px){.sunburst-svg{transform:scale(1.02)}.rp{min-width:300px}}
+
+</style>
+</head>
+<body>
+<header>
+<div class="hl">
+<h1>M9 Metropolitan Council <span>×</span> Technology Opportunity Map</h1>
+<p>GENERIC MODEL · INNER-METRO VICTORIAN COUNCILS · AI / IoT / ANALYTICS OVERLAY</p>
+</div>
+<div class="hdr-actions">
+<button class="home-btn" onclick="goHome()" title="Reset to home view">⌂ Home</button>
+<div class="vt">
+<button class="active" onclick="setView('sun')">SUNBURST</button>
+<button onclick="setView('card')">CARD GRID</button>
+</div>
+</div>
+</header>
+<div class="bc-bar" id="bcBar"><span class="bc-item current">⌂ Council Services</span></div>
+<div class="app">
+<aside class="lp" id="leftPanel"></aside>
+<main class="canvas" id="canvas">
+<div id="sunView"></div>
+<div id="cardView"></div>
+</main>
+<aside class="rp" id="rightPanel">
+<div class="empty-state"><div class="es-icon">⬡</div><p>Click a service domain, L1 service, or technology pattern to explore AI & IoT opportunity fit.</p></div>
+</aside>
+</div>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+/* ═══ TECH PATTERNS ═══ */
+const TECHS=[
+{id:'genai',label:'GenAI / LLM',color:'#8b5cf6',desc:'Text generation, summarisation, chatbots, document drafting, email triage, knowledge retrieval, policy Q&A'},
+{id:'vlm',label:'Vision-Language',color:'#ec4899',desc:'Multimodal image+text understanding, document analysis, visual QA, aerial imagery interpretation'},
+{id:'cv',label:'Computer Vision',color:'#3b82f6',desc:'Object detection, classification, counting, tracking, condition assessment from images/video/CCTV'},
+{id:'iot',label:'IoT & Sensors',color:'#10b981',desc:'Connected devices, environmental sensors, smart bins, water/flood levels, air quality, noise, soil moisture'},
+{id:'analytics',label:'Advanced Analytics',color:'#f59e0b',desc:'Predictive models, ML, anomaly detection, demand forecasting, clustering, route optimisation, risk scoring'},
+{id:'agentic',label:'Agentic AI & Automation',color:'#ef4444',desc:'Autonomous AI agents that plan and execute multi-step workflows: permit processing, triage, scheduling, routing, evidence packaging, approval chains'},
+{id:'dt',label:'Digital Twins',color:'#06b6d4',desc:'Virtual models of physical assets, simulation, scenario planning, 3D city models, infrastructure lifecycle modelling'}
+];
+const T=id=>TECHS.find(t=>t.id===id);
+
+/* ═══ FULL SERVICE DATA ═══ */
+const DOMAINS=[
+{id:'d1',label:'Community Wellbeing & Social Services',icon:'\u{1F465}',color:'#ec4899',desc:'Health, aged care, children, families, housing, inclusion and public health services supporting vulnerable and diverse communities.',
+services:[
+{l1:'Maternal & child health',l2:[
+{name:'Universal MCH',techs:['genai','agentic']},
+{name:'Enhanced MCH',techs:['genai','analytics']},
+{name:'First-time parent groups',techs:['genai']}
+]},
+{l1:'Children & early years',l2:[
+{name:'Council-run childcare & kinder',techs:['agentic','analytics']},
+{name:'Community-run centres',techs:['genai','agentic']},
+{name:'Playgroups & toy libraries',techs:['genai']}
+]},
+{l1:'Families & young people',l2:[
+{name:'Youth programs & services',techs:['genai','analytics']},
+{name:'Family support',techs:['genai','agentic']},
+{name:'Adventure playgrounds',techs:['iot','cv']},
+{name:'Middle years programs',techs:['genai']}
+]},
+{l1:'Ageing & accessibility',l2:[
+{name:'Aged care & home support',techs:['genai','agentic','analytics']},
+{name:'Community transport',techs:['iot','analytics','agentic']},
+{name:'Meals & social connection',techs:['agentic','analytics']},
+{name:'Access & inclusion',techs:['genai','vlm']}
+]},
+{l1:'Community building',l2:[
+{name:'Community grants & funding',techs:['genai','agentic','analytics']},
+{name:'Diversity, equity & inclusion',techs:['genai']},
+{name:'Community facilities',techs:['iot','agentic']},
+{name:'Neighbourhood houses',techs:['genai']},
+{name:'Volunteer coordination',techs:['genai','agentic']}
+]},
+{l1:'Housing & homelessness',l2:[
+{name:'Affordable housing policy',techs:['genai','analytics']},
+{name:'Homelessness support',techs:['genai','analytics']},
+{name:'Rooming house oversight',techs:['agentic','analytics']}
+]},
+{l1:'Public health',l2:[
+{name:'Food safety & inspections',techs:['agentic','analytics','vlm']},
+{name:'Immunisation',techs:['agentic','analytics']},
+{name:'Infectious disease response',techs:['analytics','genai']},
+{name:'Health premises registration',techs:['agentic']}
+]}
+]},
+
+{id:'d2',label:'Environment & Sustainability',icon:'\u{1F33F}',color:'#10b981',desc:'Waste, water, greening, biodiversity, coastal management and climate action to protect and sustain the natural environment.',
+services:[
+{l1:'Waste management',l2:[
+{name:'Household kerbside collection',techs:['iot','cv','analytics']},
+{name:'Recycling',techs:['cv','iot','analytics']},
+{name:'Food & garden organics (FOGO)',techs:['iot','analytics']},
+{name:'Hard waste collection',techs:['analytics','agentic','cv']},
+{name:'Resource recovery centre',techs:['cv','iot']},
+{name:'Waste education & circular economy',techs:['genai','analytics']},
+{name:'Street sweeping',techs:['iot','analytics']}
+]},
+{l1:'Environmental sustainability',l2:[
+{name:'Climate action & emissions',techs:['analytics','dt','iot']},
+{name:'Energy management',techs:['iot','analytics','dt']},
+{name:'Sustainable buildings policy',techs:['genai','analytics']},
+{name:'Environmental grants',techs:['genai','agentic']}
+]},
+{l1:'Water & flood management',l2:[
+{name:'Stormwater harvesting',techs:['iot','dt']},
+{name:'Flood mitigation & planning',techs:['iot','analytics','dt']},
+{name:'Water-sensitive urban design',techs:['dt','analytics']},
+{name:'Drainage maintenance',techs:['iot','cv','analytics']}
+]},
+{l1:'Urban greening & biodiversity',l2:[
+{name:'Tree planting & maintenance',techs:['cv','iot','analytics']},
+{name:'Vegetation management',techs:['cv','vlm']},
+{name:'Urban forest strategy',techs:['analytics','dt']},
+{name:'Biodiversity corridors',techs:['cv','iot','analytics']},
+{name:'Nature strip management',techs:['cv','genai']}
+]},
+{l1:'Coastal & waterway management',l2:[
+{name:'Beach & foreshore maintenance',techs:['cv','iot','dt']},
+{name:'Coastal erosion management',techs:['dt','iot','analytics']},
+{name:'Marine habitat protection',techs:['iot','cv']}
+]}
+]},
+
+{id:'d3',label:'Infrastructure, Assets & Transport',icon:'\u{1F3D7}\uFE0F',color:'#8b5cf6',desc:'Roads, footpaths, buildings, fleet, drainage and transport infrastructure \u2014 the physical backbone of council operations.',
+services:[
+{l1:'Road management',l2:[
+{name:'Road maintenance & renewal',techs:['cv','iot','analytics','dt']},
+{name:'Footpath maintenance',techs:['cv','analytics']},
+{name:'Line marking',techs:['cv']},
+{name:'Traffic management',techs:['cv','iot','analytics']},
+{name:'Street lighting',techs:['iot','analytics']}
+]},
+{l1:'Asset management',l2:[
+{name:'Building maintenance & renewal',techs:['iot','dt','analytics']},
+{name:'Asset condition monitoring',techs:['cv','iot','dt','analytics']},
+{name:'Asset protection permits',techs:['agentic','genai']},
+{name:'Capital works delivery',techs:['analytics','dt','agentic']}
+]},
+{l1:'Property & facilities',l2:[
+{name:'Council building management',techs:['iot','dt']},
+{name:'Community facility bookings',techs:['agentic','analytics','genai']},
+{name:'Leasing & property portfolio',techs:['analytics','agentic','genai']},
+{name:'Depot operations',techs:['iot']}
+]},
+{l1:'Fleet management',l2:[
+{name:'Vehicle fleet operations',techs:['iot','analytics']},
+{name:'Plant & equipment',techs:['iot','analytics']},
+{name:'Fleet sustainability (EV)',techs:['iot','analytics','dt']}
+]},
+{l1:'Active & public transport',l2:[
+{name:'Cycling infrastructure',techs:['cv','iot','analytics']},
+{name:'Pedestrian safety',techs:['cv','iot']},
+{name:'School crossing supervision',techs:['cv','iot']},
+{name:'Transport advocacy & planning',techs:['analytics','genai']}
+]},
+{l1:'Drainage & stormwater infra',l2:[
+{name:'Pit & pipe maintenance',techs:['iot','cv','dt']},
+{name:'Gross pollutant traps',techs:['iot','cv']},
+{name:'Flood infrastructure',techs:['iot','dt','analytics']}
+]}
+]},
+
+{id:'d4',label:'Planning, Building & Development',icon:'\u{1F4D0}',color:'#f59e0b',desc:'Land use strategy, planning permits, building control, heritage protection and development compliance shaping the built environment.',
+services:[
+{l1:'Strategic planning',l2:[
+{name:'Land use strategy',techs:['analytics','genai','dt']},
+{name:'Housing strategy',techs:['analytics','genai']},
+{name:'Growth area planning',techs:['analytics','dt','vlm']},
+{name:'Activity centre planning',techs:['analytics','dt']}
+]},
+{l1:'Statutory planning',l2:[
+{name:'Planning permit assessment',techs:['genai','vlm','agentic','analytics']},
+{name:'Planning referrals',techs:['agentic','genai']},
+{name:'VCAT representation',techs:['genai']},
+{name:'Pre-application advice',techs:['genai','analytics']}
+]},
+{l1:'Building control',l2:[
+{name:'Building permits & inspections',techs:['vlm','agentic','cv']},
+{name:'Essential safety measures',techs:['agentic','iot']},
+{name:'Swimming pool registration',techs:['agentic','cv']},
+{name:'Building compliance',techs:['cv','vlm','agentic']}
+]},
+{l1:'Urban design & heritage',l2:[
+{name:'Urban design review',techs:['vlm','genai','dt']},
+{name:'Heritage protection & advice',techs:['vlm','genai']},
+{name:'Design review panels',techs:['genai']},
+{name:'Public realm guidelines',techs:['dt','genai']}
+]},
+{l1:'Planning compliance',l2:[
+{name:'Unauthorised development investigation',techs:['cv','vlm','analytics']},
+{name:'Planning enforcement',techs:['agentic','genai']},
+{name:'Amenity complaints',techs:['genai','agentic','analytics']}
+]}
+]},
+
+{id:'d5',label:'Public Safety, Compliance & Emergency',icon:'\u{1F6E1}\uFE0F',color:'#ef4444',desc:'Parking, local laws, community safety, amenity, emergency management and environmental health keeping communities safe.',
+services:[
+{l1:'Parking management',l2:[
+{name:'Parking enforcement & patrols',techs:['cv','analytics','iot']},
+{name:'Residential & visitor permits',techs:['agentic','genai']},
+{name:'Paid parking operations',techs:['iot','analytics']},
+{name:'Accessible parking',techs:['cv','agentic']},
+{name:'Infringement processing & appeals',techs:['genai','agentic','analytics']},
+{name:'Abandoned vehicles',techs:['cv','analytics']}
+]},
+{l1:'Local laws & compliance',l2:[
+{name:'Local law enforcement',techs:['cv','genai','agentic']},
+{name:'Animal management',techs:['agentic','analytics','genai']},
+{name:'Amenity patrols',techs:['cv','iot']},
+{name:'Noise complaints',techs:['iot','analytics']},
+{name:'Rapid response',techs:['iot','cv','analytics']}
+]},
+{l1:'Community safety',l2:[
+{name:'CCTV operations',techs:['cv','analytics']},
+{name:'Public place safety programs',techs:['cv','iot','analytics']},
+{name:'Graffiti management',techs:['cv','analytics']},
+{name:'Anti-social behaviour response',techs:['cv','analytics']},
+{name:'Summer / seasonal safety',techs:['cv','iot','analytics']}
+]},
+{l1:'City amenity',l2:[
+{name:'Public space bins & litter',techs:['iot','cv','analytics']},
+{name:'Dumped rubbish response',techs:['cv','analytics','iot']},
+{name:'Public toilets',techs:['iot']},
+{name:'Street cleaning',techs:['iot','analytics']},
+{name:'Beach cleaning',techs:['iot','cv']}
+]},
+{l1:'Municipal emergency management',l2:[
+{name:'Emergency planning & coordination',techs:['analytics','genai','dt']},
+{name:'Relief & recovery',techs:['genai','agentic']},
+{name:'Fire prevention',techs:['iot','cv','analytics']},
+{name:'Flood response',techs:['iot','analytics','dt']}
+]},
+{l1:'Environmental health compliance',l2:[
+{name:'Prescribed accommodation',techs:['agentic','analytics']},
+{name:'Cooling tower registration',techs:['agentic']},
+{name:'Tobacco compliance',techs:['agentic']},
+{name:'Domestic wastewater',techs:['iot','agentic']}
+]}
+]},
+
+{id:'d6',label:'Economy, Culture & Activation',icon:'\u{1F3AD}',color:'#f97316',desc:'Business support, tourism, arts, festivals, libraries, sport and recreation driving economic and cultural vitality.',
+services:[
+{l1:'Economic development',l2:[
+{name:'Business concierge & support',techs:['genai','analytics']},
+{name:'Trader associations',techs:['genai']},
+{name:'Precinct activation',techs:['analytics','cv','iot']},
+{name:'Outdoor dining permits & compliance',techs:['agentic','cv']}
+]},
+{l1:'Tourism & destination',l2:[
+{name:'Destination marketing',techs:['genai','analytics']},
+{name:'Visitor information',techs:['genai']},
+{name:'Major venue / market operations',techs:['iot','analytics','cv']}
+]},
+{l1:'Arts & culture',l2:[
+{name:'Public art & collections',techs:['vlm','genai']},
+{name:'Arts grants & programs',techs:['genai','agentic']},
+{name:'Artist studios',techs:['agentic']},
+{name:'Cultural venues',techs:['iot','agentic']},
+{name:'Film & photography permits',techs:['agentic','genai']}
+]},
+{l1:'Festivals & events',l2:[
+{name:'Council-run festivals',techs:['analytics','cv','iot']},
+{name:'Community event permits',techs:['agentic','genai']},
+{name:'Event safety & logistics',techs:['cv','iot','analytics']},
+{name:'Community markets',techs:['agentic','analytics']}
+]},
+{l1:'Libraries',l2:[
+{name:'Library operations & branches',techs:['genai','analytics','agentic']},
+{name:'Collections management',techs:['genai','analytics']},
+{name:'Programs & digital literacy',techs:['genai']},
+{name:'Outreach services',techs:['genai','analytics']}
+]},
+{l1:'Sport & recreation',l2:[
+{name:'Sports ground management',techs:['iot','cv','dt']},
+{name:'Recreation facility operations',techs:['iot','analytics']},
+{name:'Playground maintenance',techs:['cv','iot']},
+{name:'Recreation strategy',techs:['analytics']},
+{name:'Facility bookings',techs:['agentic','genai','analytics']}
+]}
+]},
+
+{id:'d7',label:'Customer, Engagement & Governance',icon:'\u{1F4AC}',color:'#06b6d4',desc:'Contact centre, digital services, community engagement, communications and democratic governance connecting council to community.',
+services:[
+{l1:'Customer experience',l2:[
+{name:'Contact centre / ASSIST',techs:['genai','analytics','agentic']},
+{name:'Digital self-service (web, app, chatbot)',techs:['genai','analytics']},
+{name:'Service request management',techs:['agentic','analytics','genai']},
+{name:'Customer feedback & complaints',techs:['genai','analytics']}
+]},
+{l1:'Communications',l2:[
+{name:'Strategic communications',techs:['genai']},
+{name:'Digital & social media',techs:['genai','analytics']},
+{name:'Media relations',techs:['genai','analytics']},
+{name:'Design & content production',techs:['genai','vlm']}
+]},
+{l1:'Community engagement',l2:[
+{name:'Consultation programs',techs:['genai','analytics']},
+{name:'Deliberative engagement',techs:['genai','analytics']},
+{name:'Participatory budgeting',techs:['analytics','genai']},
+{name:'Have Your Say platforms',techs:['genai','analytics']}
+]},
+{l1:'Governance & democracy',l2:[
+{name:'Council meetings & agendas',techs:['genai','agentic']},
+{name:'Councillor support',techs:['genai']},
+{name:'Elections',techs:['agentic']},
+{name:'Freedom of information',techs:['genai','agentic']},
+{name:'Privacy',techs:['genai','agentic']}
+]},
+{l1:'Advocacy & partnerships',l2:[
+{name:'State/federal advocacy',techs:['genai','analytics']},
+{name:'Regional partnerships',techs:['genai']},
+{name:'Grants & funding applications',techs:['genai','agentic','analytics']}
+]}
+]},
+
+{id:'d8',label:'Corporate & Organisational Services',icon:'\u2699\uFE0F',color:'#3b82f6',desc:'Finance, people & culture, technology, information management and project delivery powering the organisation.',
+services:[
+{l1:'Finance',l2:[
+{name:'Financial strategy',techs:['analytics','genai']},
+{name:'Accounting & payroll',techs:['agentic','analytics']},
+{name:'Rates & valuations',techs:['analytics','agentic']},
+{name:'Procurement & contracts',techs:['genai','agentic','analytics']},
+{name:'Audit & risk',techs:['analytics','genai','agentic']}
+]},
+{l1:'People & culture',l2:[
+{name:'HR services',techs:['genai','agentic']},
+{name:'Recruitment',techs:['genai','agentic','analytics']},
+{name:'Learning & development',techs:['genai']},
+{name:'OHS & wellbeing',techs:['analytics','iot','agentic']},
+{name:'Child safety',techs:['agentic','genai']}
+]},
+{l1:'Technology & digital',l2:[
+{name:'ICT infrastructure & support',techs:['agentic','analytics']},
+{name:'Business applications',techs:['agentic','analytics']},
+{name:'Cyber security',techs:['analytics','agentic']},
+{name:'Data & analytics',techs:['analytics','genai']},
+{name:'Digital transformation',techs:['genai','analytics','agentic']}
+]},
+{l1:'Information management',l2:[
+{name:'Records management',techs:['genai','agentic']},
+{name:'Information governance',techs:['genai','agentic']},
+{name:'Knowledge management',techs:['genai','analytics']},
+{name:'Privacy compliance',techs:['genai','agentic']}
+]},
+{l1:'Project & portfolio management',l2:[
+{name:'Enterprise PMO',techs:['analytics','agentic']},
+{name:'Project delivery',techs:['analytics','agentic','genai']},
+{name:'Benefits realisation',techs:['analytics']}
+]}
+]}
+];
+
+/* ═══ STATE ═══ */
+let activeTechs=new Set(TECHS.map(t=>t.id));
+let currentView='sun';
+let breadcrumb=[{label:'\u2302 Council Services',action:()=>goHome()}];
+let selectedDomainId=null;
+let selectedTechId=null;
+let resizeTimer=null;
+
+/* ═══ COUNTS ═══ */
+const TOTAL_L1=DOMAINS.reduce((a,d)=>a+d.services.length,0);
+const TOTAL_L2=DOMAINS.reduce((a,d)=>a+d.services.reduce((b,s)=>b+s.l2.length,0),0);
+
+function countTech(tid){let c=0;DOMAINS.forEach(d=>d.services.forEach(s=>s.l2.forEach(l=>{if(l.techs.includes(tid))c++})));return c}
+function getAllTechs(d){const s=new Set();d.services.forEach(sv=>sv.l2.forEach(l=>l.techs.forEach(t=>s.add(t))));return[...s]}
+function l2HasActiveTech(l2){return l2.techs.some(t=>activeTechs.has(t))}
+
+/* ═══ BREADCRUMB ═══ */
+function setBreadcrumb(items){
+  breadcrumb=items;
+  const bar=document.getElementById('bcBar');
+  bar.innerHTML=items.map((item,i)=>{
+    const isCurrent=i===items.length-1;
+    const sep=i>0?'<span class="bc-sep">›</span>':'';
+    return sep+`<span class="bc-item${isCurrent?' current':''}" onclick="breadcrumb[${i}].action()">${item.label}</span>`;
+  }).join('');
+}
+
+/* ═══ HOME ═══ */
+function goHome(){
+  selectedDomainId=null;
+  selectedTechId=null;
+  activeTechs=new Set(TECHS.map(t=>t.id));
+  renderLeft();
+  document.querySelectorAll('.dz').forEach(z=>z.classList.remove('selected'));
+  setBreadcrumb([{label:'\u2302 Council Services',action:()=>goHome()}]);
+  showEmptyRight();
+  if(currentView==='sun')renderSunburst();
+}
+function showEmptyRight(){
+  document.getElementById('rightPanel').innerHTML='<div class="empty-state"><div class="es-icon">\u2B21</div><p>Click a service domain, L1 service, or technology pattern to explore AI & IoT opportunity fit.</p></div>';
+}
+
+/* ═══ LEFT PANEL ═══ */
+function renderLeft(){
+  const lp=document.getElementById('leftPanel');
+  let h='<div class="sec-title">Technology Patterns</div>';
+  TECHS.forEach(t=>{
+    const on=activeTechs.has(t.id);
+    h+=`<div class="tech-chip ${on?'active':'off'}" onclick="selectTechnologyLens('${t.id}')">
+      <div class="tech-dot" style="background:${t.color}"></div>
+      <span class="tech-label">${t.label}</span>
+      <span class="tech-count">${countTech(t.id)}</span>
+    </div>`;
+  });
+  h+='<div class="sec-title">Service Domains</div>';
+  DOMAINS.forEach(d=>{
+    const c=d.services.reduce((a,s)=>a+s.l2.length,0);
+    h+=`<div class="dom-chip" onclick="selectDomain('${d.id}')">
+      <div class="dd" style="background:${d.color}"></div>
+      <span class="dl">${d.icon} ${d.label}</span>
+      <span class="dc">${c}</span>
+    </div>`;
+  });
+  h+=`<div class="sec-title">Summary</div>
+  <div style="font-size:.64rem;color:var(--muted);line-height:1.9;font-family:'DM Mono',monospace">
+  Domains: ${DOMAINS.length}<br>L1 Services: ${TOTAL_L1}<br>L2 Subservices: ${TOTAL_L2}<br>Tech patterns: ${TECHS.length}</div>`;
+  lp.innerHTML=h;
+}
+
+/* ═══ SUNBURST ═══ */
+let sunSvg,sunG,sunPath,sunLabel,sunLabelEl;
+function buildHierarchy(){
+  return{name:'Council Services',children:DOMAINS.map(d=>({
+    name:d.label,id:d.id,color:d.color,icon:d.icon,desc:d.desc,
+    children:d.services.map(s=>({
+      name:s.l1,parentDomain:d.id,color:d.color,
+      children:s.l2.map(l=>({name:l.name,techs:l.techs,color:d.color,parentDomain:d.id,size:1}))
+    }))
+  }))};
+}
+function renderSunburst(){
+  const container=document.getElementById('sunView');
+  container.innerHTML='';
+  const w=container.clientWidth||800,h=container.clientHeight||600;
+  const radius=Math.min(w,h)/2*.94;
+  const data=buildHierarchy();
+  const root=d3.hierarchy(data).sum(d=>d.size||0).sort((a,b)=>b.value-a.value);
+  d3.partition().size([2*Math.PI,radius])(root);
+
+  const bandGap=Math.max(4,Math.min(7,radius*.014));
+  const arc=d3.arc()
+    .startAngle(d=>d.x0).endAngle(d=>d.x1)
+    .padAngle(d=>Math.min((d.x1-d.x0)/2,.006))
+    .padRadius(radius*.62)
+    .innerRadius(d=>Math.max(0,d.y0+bandGap))
+    .outerRadius(d=>Math.max(0,d.y1-bandGap));
+
+  const arcHover=d3.arc()
+    .startAngle(d=>d.x0).endAngle(d=>d.x1)
+    .padAngle(d=>Math.min((d.x1-d.x0)/2,.006))
+    .padRadius(radius*.62)
+    .innerRadius(d=>Math.max(0,d.y0+bandGap-1.5))
+    .outerRadius(d=>Math.max(0,d.y1-bandGap+6));
+
+  const arcSelected=d3.arc()
+    .startAngle(d=>d.x0).endAngle(d=>d.x1)
+    .padAngle(d=>Math.min((d.x1-d.x0)/2,.006))
+    .padRadius(radius*.62)
+    .innerRadius(d=>Math.max(0,d.y0+bandGap-2))
+    .outerRadius(d=>Math.max(0,d.y1-bandGap+9));
+
+  const svg=d3.select(container).append('svg')
+    .attr('width',w).attr('height',h)
+    .attr('class','sunburst-svg');
+
+  const defs=svg.append('defs');
+  const filter=defs.append('filter')
+    .attr('id','sunGlow')
+    .attr('x','-45%').attr('y','-45%')
+    .attr('width','190%').attr('height','190%');
+  filter.append('feGaussianBlur').attr('stdDeviation','4.8').attr('result','blur');
+  filter.append('feColorMatrix').attr('in','blur').attr('type','matrix')
+    .attr('values','0 0 0 0 0.20  0 0 0 0 0.86  0 0 0 0 0.76  0 0 0 .72 0')
+    .attr('result','glow');
+  const fm=filter.append('feMerge');
+  fm.append('feMergeNode').attr('in','glow');
+  fm.append('feMergeNode').attr('in','SourceGraphic');
+
+  const soft=defs.append('radialGradient').attr('id','sunAmbient').attr('cx','50%').attr('cy','50%').attr('r','58%');
+  soft.append('stop').attr('offset','0%').attr('stop-color','rgba(255,255,255,.055)');
+  soft.append('stop').attr('offset','68%').attr('stop-color','rgba(255,255,255,.018)');
+  soft.append('stop').attr('offset','100%').attr('stop-color','rgba(255,255,255,0)');
+
+  root.descendants().filter(d=>d.depth).forEach(d=>{
+    const dom=d.depth===1?d:d.ancestors().find(a=>a.depth===1);
+    const base=d3.color(dom?.data?.color||d.data.color||'#64748b');
+    const g=defs.append('linearGradient')
+      .attr('id',`grad-${d.data.id||d.data.parentDomain||d.data.name.replace(/[^a-zA-Z0-9]/g,'')}-${d.depth}-${Math.round(d.x0*10000)}`)
+      .attr('gradientUnits','userSpaceOnUse')
+      .attr('x1',-radius).attr('y1',-radius).attr('x2',radius).attr('y2',radius);
+    const c1=d.depth===1?base.brighter(.18):d.depth===2?base.brighter(.58):base.brighter(.92);
+    const c2=d.depth===1?base.darker(.24):d.depth===2?base.brighter(.18):base.brighter(.48);
+    g.append('stop').attr('offset','0%').attr('stop-color',c1.formatHex());
+    g.append('stop').attr('offset','100%').attr('stop-color',c2.formatHex());
+    d._grad=g.attr('id');
+  });
+
+  const g=svg.append('g').attr('transform',`translate(${w/2},${h/2})`);
+  g.append('circle').attr('r',radius*.98).attr('fill','url(#sunAmbient)').attr('pointer-events','none');
+  g.append('circle').attr('r',root.children?.[0]?.y0||60)
+    .attr('fill','transparent').style('cursor','pointer')
+    .on('click',()=>goHome());
+
+  sunPath=g.selectAll('path').data(root.descendants().filter(d=>d.depth))
+    .join('path')
+    .attr('class','sun-segment')
+    .attr('fill',d=>`url(#${d._grad})`)
+    .attr('fill-opacity',d=>{
+      if(d.depth===3&&!l2HasActiveTech(d.data))return .06;
+      return d.depth===1?.95:d.depth===2?.68:.34;
+    })
+    .attr('d',arc)
+    .attr('stroke','rgba(255,255,255,.075)')
+    .attr('stroke-width',d=>d.depth===1?1.2:.75)
+    .attr('stroke-linejoin','round')
+    .style('cursor','pointer')
+    .on('mouseover',function(ev,d){
+      const anc=d.ancestors().reverse();
+      const descendants=d.descendants?d.descendants():[];
+      sunPath.interrupt().transition().duration(360).ease(d3.easeCubicOut)
+        .attr('fill-opacity',node=>{
+          if(node.depth===3&&!l2HasActiveTech(node.data))return .045;
+          if(anc.includes(node)||descendants.includes(node))return node.depth===1?.98:node.depth===2?.82:.56;
+          return .105;
+        })
+        .attr('d',node=>node===d?arcHover(node):arc(node));
+      d3.select(this).style('filter','url(#sunGlow)');
+      updateCentreLabel(d);
+    })
+    .on('mouseout',function(){
+      d3.select(this).style('filter',null);
+      sunPath.interrupt().transition().duration(420).ease(d3.easeCubicOut)
+        .attr('fill-opacity',d=>{
+          if(d.depth===3&&!l2HasActiveTech(d.data))return .06;
+          return d.depth===1?.95:d.depth===2?.68:.34;
+        })
+        .attr('d',arc);
+      resetCentreLabel();
+    })
+    .on('click',function(ev,d){
+      ev.stopPropagation();
+      sunPath.style('filter',null).interrupt().transition().duration(480).ease(d3.easeCubicInOut)
+        .attr('fill-opacity',node=>node===d||d.ancestors().includes(node)||d.descendants().includes(node)?(node.depth===1?1:node.depth===2?.86:.62):.08)
+        .attr('d',node=>node===d?arcSelected(node):arc(node));
+      d3.select(this).style('filter','url(#sunGlow)');
+      svg.transition().duration(520).ease(d3.easeCubicInOut)
+        .attrTween('viewBox',()=>{
+          const mid=[Math.sin((d.x0+d.x1)/2)*(d.y0+d.y1)/2,-Math.cos((d.x0+d.x1)/2)*(d.y0+d.y1)/2];
+          const scale=d.depth===1?1.06:d.depth===2?1.13:1.18;
+          const size=Math.max(w,h)/scale;
+          const x=w/2+mid[0]*.12-size/2;
+          const y=h/2+mid[1]*.12-size/2;
+          const i=d3.interpolateString(`0 0 ${w} ${h}`,`${x} ${y} ${size} ${size}`);
+          return t=>i(t);
+        });
+      if(d.depth===1)selectDomain(d.data.id);
+      else if(d.depth===2)selectL1(d.data.parentDomain,d.data.name);
+      else if(d.depth===3)selectL2(d.data);
+    });
+
+  container.style.position='relative';
+  const cl=document.createElement('div');
+  cl.className='sun-center-label';
+  cl.style.cssText=`left:${w/2}px;top:${h/2}px;transform:translate(-50%,-50%)`;
+  container.appendChild(cl);
+  sunLabelEl=cl;
+  resetCentreLabel();
+  sunSvg=svg;sunG=g;
+}
+function centreSet(html){
+  if(!sunLabelEl)return;
+  sunLabelEl.classList.add('changing');
+  window.setTimeout(()=>{
+    sunLabelEl.innerHTML=html;
+    sunLabelEl.classList.remove('changing');
+  },90);
+}
+function shortSummary(text,max=118){
+  if(!text)return '';
+  return text.length>max?text.slice(0,max-1)+'…':text;
+}
+function updateCentreLabel(d){
+  if(!sunLabelEl)return;
+  if(d.depth===1){
+    const dom=DOMAINS.find(x=>x.id===d.data.id);
+    const c=dom?dom.services.reduce((a,s)=>a+s.l2.length,0):0;
+    centreSet(`<div class="scl-kicker">Service Domain</div><div class="scl-name" style="color:${d.data.color}">${d.data.icon||''} ${d.data.name}</div><div class="scl-sub">${dom?dom.services.length:0} L1 services · ${c} L2 subservices</div><div class="scl-summary">${shortSummary(dom?.desc)}</div>`);
+  }else if(d.depth===2){
+    const dom=DOMAINS.find(x=>x.id===d.data.parentDomain);
+    const techs=new Set();
+    if(d.children)d.children.forEach(l=>l.data.techs?.forEach(t=>techs.add(t)));
+    centreSet(`<div class="scl-kicker">Service Cluster</div><div class="scl-name">${d.data.name}</div><div class="scl-sub">${d.children?d.children.length:0} subservices · ${techs.size} tech patterns</div><div class="scl-summary">${dom?dom.label:''}</div>`);
+  }else{
+    const active=d.data.techs?d.data.techs.filter(t=>activeTechs.has(t)):[];
+    const labels=active.map(t=>T(t)?.label).filter(Boolean).slice(0,2).join(' · ');
+    centreSet(`<div class="scl-kicker">Subservice</div><div class="scl-name" style="font-size:.94rem">${d.data.name}</div><div class="scl-sub">${active.length} applicable tech patterns</div><div class="scl-summary">${labels}</div>`);
+  }
+}
+function resetCentreLabel(){
+  if(!sunLabelEl)return;
+  centreSet(`<div class="scl-kicker">Council Service Map</div><div class="scl-name">Council Services</div><div class="scl-sub">${DOMAINS.length} domains · ${TOTAL_L1} L1 services · ${TOTAL_L2} L2 subservices</div><div class="scl-summary">Hover to preview. Click to spotlight a domain, service cluster or subservice.</div>`);
+}
+/* ═══ CARD GRID ═══ */
+function renderCards(){
+  const cv=document.getElementById('cardView');
+  let h='<div class="cg">';
+  DOMAINS.forEach((d,di)=>{
+    const techs=getAllTechs(d);
+    const sel=selectedDomainId===d.id?'selected':'';
+    h+=`<div class="dz ${sel}" onclick="selectDomain('${d.id}')" data-dom="${d.id}" title="${d.desc}">
+    <div class="dz-head"><div class="dz-icon">${d.icon}</div>
+    <div><div class="dz-title" style="color:${d.color}">${d.label}</div>
+    <div class="dz-sub">${d.services.length} services \u00b7 ${d.services.reduce((a,s)=>a+s.l2.length,0)} subservices</div></div></div>
+    <div class="dz-desc">${d.desc}</div>`;
+    d.services.forEach((s,si)=>{
+      const sid=`s${di}_${si}`;
+      h+=`<div class="svc-group"><div class="svc-l1" onclick="event.stopPropagation();toggleL1('${sid}',this)">${s.l1}</div>
+      <div class="svc-l2-list" id="l2_${sid}">`;
+      s.l2.forEach(l=>{
+        const tags=l.techs.filter(t=>activeTechs.has(t)).map(t=>{
+          const tt=T(t);
+          return `<span class="t-tag" style="background:${tt.color}22;color:${tt.color}" title="${tt.label}" onclick="event.stopPropagation();selectTech('${t}')">${tt.label}</span>`;
+        }).join('');
+        h+=`<div class="svc-l2">${l.name} ${tags}</div>`;
+      });
+      h+='</div></div>';
+    });
+    const tb=techs.filter(t=>activeTechs.has(t)).map(t=>{
+      const tt=T(t);
+      return `<span class="dz-tech-badge" style="background:${tt.color}22;color:${tt.color}">${tt.label}</span>`;
+    }).join('');
+    h+=`<div class="dz-techs">${tb}</div></div>`;
+  });
+  h+='</div>';
+  cv.innerHTML=h;
+}
+
+function toggleL1(sid,el){
+  el.classList.toggle('open');
+  const list=document.getElementById('l2_'+sid);
+  if(list)list.classList.toggle('open');
+}
+
+/* ═══ RIGHT PANEL DETAIL ═══ */
+function wrapDetail(inner){
+  return `<button class="rp-close" onclick="goHome()" title="Close">\u2715</button>${inner}`;
+}
+
+function selectDomain(id){
+  const d=DOMAINS.find(x=>x.id===id);if(!d)return;
+  selectedDomainId=id;
+  // Highlight card
+  document.querySelectorAll('.dz').forEach(z=>z.classList.toggle('selected',z.dataset.dom===id));
+  // Breadcrumb
+  setBreadcrumb([
+    {label:'\u2302 Council Services',action:()=>goHome()},
+    {label:`${d.icon} ${d.label}`,action:()=>selectDomain(id)}
+  ]);
+  // Right panel
+  const techs=getAllTechs(d);
+  const l2c=d.services.reduce((a,s)=>a+s.l2.length,0);
+  let opp=0;d.services.forEach(s=>s.l2.forEach(l=>l.techs.forEach(t=>{if(activeTechs.has(t))opp++})));
+  let h=`<div class="dc2"><h3><span>${d.icon}</span><span style="color:${d.color}">${d.label}</span></h3>
+  <p>${d.desc}</p>
+  <div class="stats-grid">
+    <div class="stat-box"><div class="stat-num">${d.services.length}</div><div class="stat-label">L1 SERVICES</div></div>
+    <div class="stat-box"><div class="stat-num">${l2c}</div><div class="stat-label">L2 SUBSERVICES</div></div>
+    <div class="stat-box"><div class="stat-num">${techs.length}</div><div class="stat-label">TECH PATTERNS</div></div>
+    <div class="stat-box"><div class="stat-num">${opp}</div><div class="stat-label">TECH TOUCHPOINTS</div></div>
+  </div></div>`;
+  h+='<div class="sec-title">Services & Technology Fit</div>';
+  d.services.forEach(s=>{
+    const stechs=new Set();
+    s.l2.forEach(l=>l.techs.forEach(t=>stechs.add(t)));
+    h+=`<div class="dc2" style="padding:11px;cursor:pointer" onclick="selectL1('${d.id}','${s.l1.replace(/'/g,"\\'")}')">
+    <h3 style="font-size:.8rem;margin-bottom:3px">${s.l1}</h3>
+    <p style="font-size:.64rem;margin-bottom:5px">${s.l2.length} subservices</p>
+    <div style="display:flex;flex-wrap:wrap;gap:3px">${[...stechs].filter(t=>activeTechs.has(t)).map(t=>{
+      const tt=T(t);
+      return `<span class="dz-tech-badge" style="background:${tt.color}22;color:${tt.color};font-size:.54rem">${tt.label}</span>`;
+    }).join('')}</div></div>`;
+  });
+  document.getElementById('rightPanel').innerHTML=wrapDetail(h);
+}
+
+function selectL1(domId,l1Name){
+  const d=DOMAINS.find(x=>x.id===domId);if(!d)return;
+  const s=d.services.find(x=>x.l1===l1Name);if(!s)return;
+  selectedDomainId=domId;
+  setBreadcrumb([
+    {label:'\u2302 Council Services',action:()=>goHome()},
+    {label:`${d.icon} ${d.label}`,action:()=>selectDomain(domId)},
+    {label:s.l1,action:()=>selectL1(domId,l1Name)}
+  ]);
+  const stechs=new Set();
+  s.l2.forEach(l=>l.techs.forEach(t=>stechs.add(t)));
+  let h=`<div class="dc2"><h3>${d.icon} <span style="color:${d.color}">${s.l1}</span></h3>
+  <p>Part of ${d.label}</p>
+  <div class="stats-grid" style="margin-top:6px">
+    <div class="stat-box"><div class="stat-num">${s.l2.length}</div><div class="stat-label">SUBSERVICES</div></div>
+    <div class="stat-box"><div class="stat-num">${stechs.size}</div><div class="stat-label">TECH PATTERNS</div></div>
+  </div></div>`;
+  h+='<div class="sec-title">Subservices & Tech Opportunities</div>';
+  s.l2.forEach(l=>{
+    h+=`<div class="dc2" style="padding:10px">
+    <h3 style="font-size:.76rem">${l.name}</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">`;
+    l.techs.filter(t=>activeTechs.has(t)).forEach(t=>{
+      const tt=T(t);
+      h+=`<div style="background:${tt.color}12;border:1px solid ${tt.color}30;border-radius:6px;padding:5px 7px;flex:1;min-width:110px">
+      <div style="font-family:'DM Mono',monospace;font-size:.56rem;color:${tt.color};font-weight:500">${tt.label}</div>
+      <div style="font-size:.6rem;color:#9ca3af;margin-top:1px;line-height:1.4">${tt.desc.split(',').slice(0,2).join(',')}</div>
+      </div>`;
+    });
+    h+='</div></div>';
+  });
+  document.getElementById('rightPanel').innerHTML=wrapDetail(h);
+}
+
+function selectL2(data){
+  if(!data||!data.techs)return;
+  const domId=data.parentDomain;
+  const d=DOMAINS.find(x=>x.id===domId);
+  // Find L1
+  let l1Name='';
+  if(d)d.services.forEach(s=>s.l2.forEach(l=>{if(l.name===data.name)l1Name=s.l1}));
+  setBreadcrumb([
+    {label:'\u2302 Council Services',action:()=>goHome()},
+    ...(d?[{label:`${d.icon} ${d.label}`,action:()=>selectDomain(domId)}]:[]),
+    ...(l1Name?[{label:l1Name,action:()=>selectL1(domId,l1Name)}]:[]),
+    {label:data.name,action:()=>selectL2(data)}
+  ]);
+  let h=`<div class="dc2"><h3 style="font-size:.84rem">${data.name}</h3>
+  <p>${data.techs.filter(t=>activeTechs.has(t)).length} technology patterns applicable</p></div>
+  <div class="sec-title">Applicable Technologies</div>`;
+  data.techs.filter(t=>activeTechs.has(t)).forEach(t=>{
+    const tt=T(t);
+    h+=`<div class="dc2">
+    <h3><span style="width:10px;height:10px;border-radius:50%;background:${tt.color};display:inline-block"></span>${tt.label}</h3>
+    <p>${tt.desc}</p></div>`;
+  });
+  document.getElementById('rightPanel').innerHTML=wrapDetail(h);
+}
+
+function selectTech(techId){
+  const tt=T(techId);if(!tt)return;
+  setBreadcrumb([
+    {label:'\u2302 Council Services',action:()=>goHome()},
+    {label:`${tt.label}`,action:()=>selectTech(techId)}
+  ]);
+  let svcs=[];
+  DOMAINS.forEach(d=>d.services.forEach(s=>s.l2.forEach(l=>{
+    if(l.techs.includes(techId))svcs.push({name:l.name,domain:d.label,domColor:d.color,icon:d.icon});
+  })));
+  let h=`<div class="dc2">
+  <h3><span style="width:12px;height:12px;border-radius:50%;background:${tt.color};display:inline-block"></span>${tt.label}</h3>
+  <p>${tt.desc}</p>
+  <div class="stats-grid" style="margin-top:8px">
+    <div class="stat-box"><div class="stat-num">${svcs.length}</div><div class="stat-label">SUBSERVICES</div></div>
+    <div class="stat-box"><div class="stat-num">${new Set(svcs.map(s=>s.domain)).size}</div><div class="stat-label">DOMAINS</div></div>
+  </div></div>`;
+  h+='<div class="sec-title">Applicable Subservices</div>';
+  const grouped={};
+  svcs.forEach(s=>{if(!grouped[s.domain])grouped[s.domain]={items:[],color:s.domColor,icon:s.icon};grouped[s.domain].items.push(s.name)});
+  Object.keys(grouped).forEach(dom=>{
+    const g=grouped[dom];
+    h+=`<div class="dc2" style="padding:10px"><h3 style="font-size:.76rem"><span>${g.icon}</span><span style="color:${g.color}">${dom}</span></h3>`;
+    g.items.forEach(i=>{h+=`<div class="uc-item"><div class="uc-dot" style="background:${g.color}"></div>${i}</div>`});
+    h+='</div>';
+  });
+  document.getElementById('rightPanel').innerHTML=wrapDetail(h);
+}
+
+/* ═══ INTERACTIONS ═══ */
+
+function selectTechnologyLens(techId){
+  if(selectedTechId===techId){
+    selectedTechId=null;
+    activeTechs=new Set(TECHS.map(t=>t.id));
+    renderLeft();
+    if(currentView==='card')renderCards();
+    if(currentView==='sun'){
+      try{renderSunburst();}catch(e){console.error(e);}
+    }
+    setBreadcrumb([{label:'\u2302 Council Services',action:()=>goHome()}]);
+    showEmptyRight();
+    return;
+  }
+  selectedTechId=techId;
+  activeTechs=new Set([techId]);
+  renderLeft();
+  if(currentView==='card')renderCards();
+  if(currentView==='sun'&&sunPath){
+    sunPath.transition().duration(320)
+      .attr('fill-opacity',d=>{
+        if(d.depth===3)return d.data.techs&&d.data.techs.includes(techId)?.72:.035;
+        if(d.depth===2)return d.children&&d.children.some(c=>c.data.techs&&c.data.techs.includes(techId))?.66:.06;
+        if(d.depth===1)return d.descendants().some(c=>c.data&&c.data.techs&&c.data.techs.includes(techId))?.92:.06;
+        return .06;
+      });
+  }
+  selectTech(techId);
+}
+
+function toggleTech(id){
+  selectTechnologyLens(id);
+}
+
+function setView(v){
+  currentView=v;
+  document.querySelectorAll('.vt button').forEach((b,i)=>{
+    b.classList.toggle('active',(i===0&&v==='sun')||(i===1&&v==='card'));
+  });
+  const sv=document.getElementById('sunView'),cv=document.getElementById('cardView');
+  if(v==='sun'){sv.style.display='flex';cv.style.display='none';renderSunburst();}
+  else{sv.style.display='none';cv.style.display='block';renderCards();}
+  // C2: clear right panel on view switch
+  goHome();
+}
+
+/* ═══ INIT ═══ */
+renderLeft();
+renderSunburst();
+setBreadcrumb([{label:'\u2302 Council Services',action:()=>goHome()}]);
+// C3: debounced resize
+window.addEventListener('resize',()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer=setTimeout(()=>{if(currentView==='sun')renderSunburst()},300);
+});
+</script>
+</body>
+</html>
